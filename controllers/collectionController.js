@@ -39,7 +39,7 @@ class CollectionController {
   }
 
   async getCollection(req, res, next) {
-    const userId = req.body.id;
+    const userId = req.query.id;
     Collection.findOne({where: {userId}})
       .then((collection) => {
         const liked = collection.dataValues.liked;

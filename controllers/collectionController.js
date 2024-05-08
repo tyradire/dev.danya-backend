@@ -43,7 +43,8 @@ class CollectionController {
     Collection.findOne({where: {userId}})
       .then((collection) => {
         const liked = collection.dataValues.liked;
-        res.status(200).send({liked})})
+        res.status(200).send({liked})
+      })
       .catch(next);
   }
 }

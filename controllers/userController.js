@@ -50,6 +50,25 @@ class UserController {
     )
     return res.json({token})
   }
+
+  async rename(req, res, next) {
+    const newName = req.body.name;
+    const token = req.headers.authorization;
+    if (!token) {
+      return res.status(401).json({message: "Пользователь не авторизован"})
+    }
+    const decoded = jwt.verify(token.split(' ')[1], process.env.SECRET);
+    const userId = decoded.id;
+    console.log('проверка ренейма ',userId)
+    User.findOne({where: {id: userId}})
+      .then(user => {
+        user.name = newName;
+        user.changed('name', true);
+        user.save();
+        res.status(200).send({user})
+      })
+      .catch(err => console.log('err ', err))
+  }
 }
 
 module.exports = new UserController();

@@ -18,7 +18,7 @@ class UserController {
     const user = await User.create({email, name, avatar, role, password: hashPassword})
     const collection = await Collection.create({userId: user.id})
     const token = jwt.sign(
-      {id: user.id, email, name: user.name, role: user.role}, 
+      {id: user.id, email}, 
       process.env.SECRET,
       {expiresIn: '24h'}
     )
@@ -35,7 +35,7 @@ class UserController {
       return next(ApiError.unauthorized('Указан неверный пароль'));
     }
     const token = jwt.sign(
-      {id: user.id, email, name: user.name, role: user.role}, 
+      {id: user.id, email}, 
       process.env.SECRET,
       {expiresIn: '24h'}
     )
@@ -44,7 +44,7 @@ class UserController {
 
   async check(req, res, next) {
     const token = jwt.sign(
-      {id: req.user.id, email: req.user.email, name: req.user.name, role: req.user.role}, 
+      {id: req.user.id, email: req.user.email}, 
       process.env.SECRET,
       {expiresIn: '24h'}
     )
@@ -59,7 +59,6 @@ class UserController {
     }
     const decoded = jwt.verify(token.split(' ')[1], process.env.SECRET);
     const userId = decoded.id;
-    console.log('проверка ренейма ',userId)
     User.findOne({where: {id: userId}})
       .then(user => {
         user.name = newName;
@@ -67,7 +66,17 @@ class UserController {
         user.save();
         res.status(200).send({user})
       })
-      .catch(err => console.log('err ', err))
+      .catch(err => console.log(err))
+  }
+
+  async getUserData(req, res, next) {
+    const token = req.headers.authorization;
+    const decoded = jwt.verify(token.split(' ')[1], process.env.SECRET);
+    User.findOne({where: {id: decoded.id}})
+      .then(user => {
+        return res.json({user})
+      })
+      .catch(err => console.log(err))
   }
 }
 

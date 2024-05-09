@@ -39,9 +39,12 @@ class CollectionController {
   }
 
   async getCollection(req, res, next) {
-    const userId = req.query.id;
+    const token = req.headers.authorization;
+    const decoded = jwt.verify(token.split(' ')[1], process.env.SECRET)
+    const userId = decoded.id;
     Collection.findOne({where: {userId}})
       .then((collection) => {
+        console.log('данные с бека ',collection.dataValues.liked)
         const liked = collection.dataValues.liked;
         res.status(200).send({liked})
       })

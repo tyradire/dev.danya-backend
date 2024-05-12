@@ -1,7 +1,9 @@
 const ApiError = require("../error/ApiError");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { User, Collection } = require('../models/models');
+const { User, Collection, UserToken } = require('../models/models');
+const TokenService = require('../utils/Token');
+const { COOKIE_SETTINGS, ACCESS_TOKEN_EXPIRATION } = require('../utils/constants');
 
 class UserController {
 
@@ -12,17 +14,17 @@ class UserController {
     }
     const userExist = await User.findOne({where: {email}})
     if (userExist) {
-      return next(ApiError.badRequest('Пользователь с данным email уже существует'))
+      return next(ApiError.conflict('Пользователь с данным email уже существует'))
     }
     const hashPassword = await bcrypt.hash(password, 5)
     const user = await User.create({email, name, avatar, role, password: hashPassword})
     const collection = await Collection.create({userId: user.id})
-    const token = jwt.sign(
-      {id: user.id, email}, 
-      process.env.SECRET,
-      {expiresIn: '24h'}
-    )
-    return res.json({token})
+    const payload = {id: user.id, email: email, name: user.name};
+    const accessToken = await TokenService.generateAccessToken(payload)
+    const refreshToken = await TokenService.generateRefreshToken(payload)
+    const userToken = await UserToken.create({userId: user.id, refreshToken: refreshToken})
+    res.cookie('refreshToken', refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+    return res.status(200).json({accessToken, ACCESS_TOKEN_EXPIRATION})
   }
   async login(req, res, next) {
     const {email, password} = req.body;
@@ -36,8 +38,8 @@ class UserController {
     }
     const token = jwt.sign(
       {id: user.id, email}, 
-      process.env.SECRET,
-      {expiresIn: '24h'}
+      process.env.ACCESS_SECRET,
+      {expiresIn: '45m'}
     )
     return res.json({token})
   }
@@ -45,8 +47,8 @@ class UserController {
   async check(req, res, next) {
     const token = jwt.sign(
       {id: req.user.id, email: req.user.email}, 
-      process.env.SECRET,
-      {expiresIn: '24h'}
+      process.env.ACCESS_SECRET,
+      {expiresIn: '45m'}
     )
     return res.json({token})
   }
@@ -57,7 +59,7 @@ class UserController {
     if (!token) {
       return res.status(401).json({message: "Пользователь не авторизован"})
     }
-    const decoded = jwt.verify(token.split(' ')[1], process.env.SECRET);
+    const decoded = jwt.verify(token.split(' ')[1], process.env.ACCESS_SECRET);
     const userId = decoded.id;
     User.findOne({where: {id: userId}})
       .then(user => {
@@ -71,7 +73,7 @@ class UserController {
 
   async getUserData(req, res, next) {
     const token = req.headers.authorization;
-    const decoded = jwt.verify(token.split(' ')[1], process.env.SECRET);
+    const decoded = jwt.verify(token.split(' ')[1], process.env.ACCESS_SECRET);
     User.findOne({where: {id: decoded.id}})
       .then(user => {
         return res.json({user})

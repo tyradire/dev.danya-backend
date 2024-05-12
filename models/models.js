@@ -12,13 +12,24 @@ const User = sequelize.define('user', {
 
 const Collection = sequelize.define('collection', {
   id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
-  liked: {type: DataTypes.ARRAY(DataTypes.INTEGER), defaultValue: []}
+  liked: {type: DataTypes.ARRAY(DataTypes.INTEGER), defaultValue: []},
+  watched: {type: DataTypes.ARRAY(DataTypes.INTEGER), defaultValue: []},
+  wish: {type: DataTypes.ARRAY(DataTypes.INTEGER), defaultValue: []},
+})
+
+const UserToken = sequelize.define('token', {
+  id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+  refreshToken: {type: DataTypes.TEXT, defaultValue: ''},
 })
 
 User.hasOne(Collection);
 Collection.belongsTo(User);
 
+User.hasOne(UserToken);
+UserToken.belongsTo(User);
+
 module.exports = {
   User,
-  Collection
+  Collection,
+  UserToken
 }

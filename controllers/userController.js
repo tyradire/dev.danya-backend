@@ -19,7 +19,7 @@ class UserController {
     const hashPassword = await bcrypt.hash(password, 5)
     const user = await User.create({email, name, avatar, role, password: hashPassword})
     const collection = await Collection.create({userId: user.id})
-    const payload = {id: user.id, email: email, name: user.name};
+    const payload = {id: user.id, email: email, name: user.name}
     const accessToken = await TokenService.generateAccessToken(payload)
     const refreshToken = await TokenService.generateRefreshToken(payload)
     const userToken = await UserToken.create({userId: user.id, refreshToken: refreshToken})
@@ -36,21 +36,15 @@ class UserController {
     if (!comparePassword) {
       return next(ApiError.unauthorized('Указан неверный пароль'));
     }
-    const token = jwt.sign(
-      {id: user.id, email}, 
-      process.env.ACCESS_SECRET,
-      {expiresIn: '45m'}
-    )
-    return res.json({token})
+    const payload = {id: user.id, email: user.email, name: user.name}
+    const accessToken = await TokenService.generateAccessToken(payload)
+    return res.json({accessToken})
   }
 
   async check(req, res, next) {
-    const token = jwt.sign(
-      {id: req.user.id, email: req.user.email}, 
-      process.env.ACCESS_SECRET,
-      {expiresIn: '45m'}
-    )
-    return res.json({token})
+    const payload = {id: req.user.id, email: req.user.email, name: req.user.name}
+    const accessToken = await TokenService.generateAccessToken(payload)
+    return res.json({accessToken})
   }
 
   async rename(req, res, next) {

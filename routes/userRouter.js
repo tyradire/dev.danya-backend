@@ -8,7 +8,6 @@ router.post('/login', userController.login);
 router.get('/auth', authMiddleware, userController.check);
 router.get('/userdata', userController.getUserData)
 router.put('/rename', userController.rename);
-router.get('/refresh', userController.refresh);
 router.post('/logout', userController.logout);
 
 module.exports = router;

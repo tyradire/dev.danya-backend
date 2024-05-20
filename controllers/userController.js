@@ -57,24 +57,6 @@ class UserController {
     return res.json({accessToken})
   }
 
-  async refresh(req, res, next) {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) {
-      return next(ApiError.forbidden('Пользователь не авторизован'));
-    }
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET)
-    const payload = {id: decoded.id, email: decoded.email, name: decoded.name}
-    const accessToken = await TokenService.generateAccessToken(payload)
-    UserToken.findOne({where: {userId: decoded.id}})
-      .then(token => {
-        console.log(token.dataValues.refreshToken === refreshToken)
-        res.status(200).send({token})
-      })
-      .catch(err => console.log(err))
-    res.cookie('refreshToken', refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
-    return res.status(200).json({accessToken, ACCESS_TOKEN_EXPIRATION})
-  }
-
   async logout(req, res, next) {
     const rawToken = req.headers.cookie;
     const token = rawToken.split('refreshToken=')[1]
@@ -93,35 +75,50 @@ class UserController {
   async rename(req, res, next) {
     const newName = req.body.name;
     const token = req.headers.authorization;
+    let result = { accessToken: token.split(' ')[1], refreshToken: req.cookies.refreshToken };
     if (!token) {
-      return res.status(401).json({message: "Пользователь не авторизован"})
+      return res.status(403).json({message: "Пользователь не авторизован"})
     }
-    const decoded = jwt.verify(token.split(' ')[1], process.env.ACCESS_SECRET);
+    const decoded = jwt.decode(token.split(' ')[1], process.env.ACCESS_SECRET);
+    const expired = decoded.exp * 1000
+    const nowDate = (Date.now() + (3 * 60 * 60))
+    if (nowDate > expired) {
+      console.log('Access token is expired!')
+      result = await TokenService.refreshToken({ refreshToken: req.cookies.refreshToken })
+    }
     const userId = decoded.id;
     User.findOne({where: {id: userId}})
       .then(user => {
         user.name = newName;
         user.changed('name', true);
         user.save();
-        res.status(200).send({user})
+        res.status(200)
+        .send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
+        .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
       })
       .catch(err => console.log(err))
   }
 
   async getUserData(req, res, next) {
-    const token = req.cookies.refreshToken;
-    const decoded = jwt.decode(token)
+    const token = req.headers.authorization;
+    let result = { accessToken: token.split(' ')[1], refreshToken: req.cookies.refreshToken };
+    if (!token) {
+      return res.status(403).json({message: "Пользователь не авторизован"})
+    }
+    const decoded = jwt.decode(token.split(' ')[1], process.env.ACCESS_SECRET)
     const expired = decoded.exp * 1000
     const nowDate = (Date.now() + (3 * 60 * 60))
-    if (nowDate > expired || !token) {
-      console.log(nowDate, expired, token)
-      return res.status(401).json({message: "Пользователь не авторизован"});
+    if (nowDate > expired) {
+      console.log('Access token is expired!')
+      result = await TokenService.refreshToken({ refreshToken: req.cookies.refreshToken })
     }
-      User.findOne({where: {id: decoded.id}})
-      .then(user => {
-        return res.json({user})
-      })
-      .catch(err => console.log(err))
+    User.findOne({where: {id: decoded.id}})
+    .then(user => {
+      res.status(200)
+      .send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
+      .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+    })
+    .catch(err => console.log(err))
   }
 }
 

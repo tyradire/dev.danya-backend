@@ -38,13 +38,56 @@ class UserController {
     }
     const payload = {id: user.id, email: user.email, name: user.name}
     const accessToken = await TokenService.generateAccessToken(payload)
-    return res.json({accessToken})
+    const refreshToken = await TokenService.generateRefreshToken(payload)
+    UserToken.findOne({where: {userId: user.id}})
+      .then(token => {
+        token.refreshToken = refreshToken;
+        token.changed('refreshToken', true);
+        token.save();
+        res.status(200).send({token})
+      })
+      .catch(err => console.log(err))
+    res.cookie('refreshToken', refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+    return res.status(200).json({accessToken, ACCESS_TOKEN_EXPIRATION})
   }
 
   async check(req, res, next) {
     const payload = {id: req.user.id, email: req.user.email, name: req.user.name}
     const accessToken = await TokenService.generateAccessToken(payload)
     return res.json({accessToken})
+  }
+
+  async refresh(req, res, next) {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return next(ApiError.forbidden('Пользователь не авторизован'));
+    }
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET)
+    const payload = {id: decoded.id, email: decoded.email, name: decoded.name}
+    const accessToken = await TokenService.generateAccessToken(payload)
+    UserToken.findOne({where: {userId: decoded.id}})
+      .then(token => {
+        console.log(token.dataValues.refreshToken === refreshToken)
+        res.status(200).send({token})
+      })
+      .catch(err => console.log(err))
+    res.cookie('refreshToken', refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+    return res.status(200).json({accessToken, ACCESS_TOKEN_EXPIRATION})
+  }
+
+  async logout(req, res, next) {
+    const rawToken = req.headers.cookie;
+    const token = rawToken.split('refreshToken=')[1]
+    const decoded = jwt.verify(token, process.env.REFRESH_SECRET)
+    UserToken.findOne({where: {userId: decoded.id}})
+      .then(token => {
+        token.refreshToken = '';
+        token.changed('refreshToken', true);
+        token.save();
+        res.status(200).send({token})
+      })
+      .catch(err => console.log(err))
+    res.clearCookie('refreshToken')
   }
 
   async rename(req, res, next) {
@@ -66,9 +109,16 @@ class UserController {
   }
 
   async getUserData(req, res, next) {
-    const token = req.headers.authorization;
-    const decoded = jwt.verify(token.split(' ')[1], process.env.ACCESS_SECRET);
-    User.findOne({where: {id: decoded.id}})
+    const token = req.cookies.refreshToken;
+    const decoded = jwt.decode(token)
+    const expired = decoded.exp * 1000
+    const nowDate = (Date.now() + (3 * 60 * 60))
+    //const decoded = jwt.verify(token, process.env.REFRESH_SECRET);
+    if (nowDate > expired || !token) {
+      console.log(nowDate, expired, token)
+      return res.status(401).json({message: "Пользователь не авторизован"});
+    }
+      User.findOne({where: {id: decoded.id}})
       .then(user => {
         return res.json({user})
       })

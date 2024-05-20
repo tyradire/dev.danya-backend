@@ -113,7 +113,6 @@ class UserController {
     const decoded = jwt.decode(token)
     const expired = decoded.exp * 1000
     const nowDate = (Date.now() + (3 * 60 * 60))
-    //const decoded = jwt.verify(token, process.env.REFRESH_SECRET);
     if (nowDate > expired || !token) {
       console.log(nowDate, expired, token)
       return res.status(401).json({message: "Пользователь не авторизован"});

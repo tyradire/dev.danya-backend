@@ -8,11 +8,21 @@ const errorHandler = require('./middlewares/ErrorMiddleware')
 
 const PORT = process.env.PORT || 3000
 
-const app = express()
+const app = express();
+
+
+const urls = [
+    'http://localhost:3000',
+    'http://danya-frontend.ru',
+    'http://dev.danya-frontend.ru',
+    'https://danya-frontend.ru',
+    'https://dev.danya-frontend.ru',
+]
+
 app.use(cookieParser())
 app.use(cors({
     credentials: true,
-    origin: process.env.CLIENT_URL
+    origin: urls
 }))
 app.use(express.json())
 app.use('/api', router)

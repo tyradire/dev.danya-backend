@@ -20,8 +20,8 @@ class CollectionController {
     const userId = decoded.id
     Collection.findOne({where: {userId}})
       .then((collection) => {
-        collection.liked.push(movieId)
-        collection.changed('liked', true)
+        collection.watched.push(movieId)
+        collection.changed('watched', true)
         collection.save()
         res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
       })
@@ -44,8 +44,8 @@ class CollectionController {
     const userId = decoded.id
     Collection.findOne({where: {userId}})
       .then((collection) => {
-        collection.liked = collection.liked.filter(elemId => {return elemId != movieId})
-        collection.changed('liked', true)
+        collection.watched = collection.watched.filter(elemId => {return elemId != movieId})
+        collection.changed('watched', true)
         collection.save()
         res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
       })
@@ -68,9 +68,9 @@ class CollectionController {
     const userId = decoded.id;
     Collection.findOne({where: {userId}})
       .then((collection) => {
-        const liked = collection.dataValues.liked;
+        const watched = collection.dataValues.watched;
         res.status(200)
-        .send({liked,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION})
+        .send({watched,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION})
         .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
       })
       .catch(next);

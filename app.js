@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser')
 const router = require('./routes/index')
 const errorHandler = require('./middlewares/ErrorMiddleware')
 
-const PORT = process.env.PORT || 4000
+const PORT = process.env.PORT || 3000
 
 const app = express();
 

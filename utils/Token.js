@@ -9,7 +9,7 @@ class TokenService {
       email: payload.email, 
       name: payload.name
     }, process.env.ACCESS_SECRET, {
-      expiresIn: '1m'
+      expiresIn: '40m'
     })
   }
   async generateRefreshToken(payload) {

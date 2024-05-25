@@ -12,6 +12,7 @@ const app = express();
 
 
 const urls = [
+    'http://localhost:8080',
     'http://localhost:3000',
     'http://danya-frontend.ru',
     'http://dev.danya-frontend.ru',

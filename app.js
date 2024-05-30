@@ -24,7 +24,8 @@ const urls = [
 app.use(cookieParser())
 app.use(cors({
     credentials: true,
-    origin: urls
+    origin: urls,
+    optionsSuccessStatus: 200
 }))
 app.use(express.json())
 app.use(express.static(path.resolve(__dirname, 'static')))

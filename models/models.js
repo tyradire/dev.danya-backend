@@ -6,7 +6,7 @@ const User = sequelize.define('user', {
   name: {type: DataTypes.STRING, unique: false, defaultValue: 'Пользователь'},
   email: {type: DataTypes.STRING, unique: true},
   password: {type: DataTypes.STRING, unique: false},
-  avatar: {type: DataTypes.STRING, unique: false, defaultValue: 'https://www.svgrepo.com/show/532363/user-alt-1.svg'},
+  avatar: {type: DataTypes.STRING, unique: false, defaultValue: 'http://localhost:3000/default-user-avatar.svg'},
   role: {type: DataTypes.STRING, defaultValue: 'USER'}
 })
 

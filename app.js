@@ -21,12 +21,12 @@ const urls = [
     'https://dev.danya-frontend.ru',
 ]
 
-app.use(cookieParser())
 app.use(cors({
     credentials: true,
     origin: urls,
     optionsSuccessStatus: 200
 }))
+app.use(cookieParser())
 app.use(express.json())
 app.use(express.static(path.resolve(__dirname, 'static')))
 app.use(fileUpload({

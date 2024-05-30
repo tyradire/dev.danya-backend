@@ -126,9 +126,9 @@ class UserController {
   async changeAvatar(req, res, next) {
     const token = req.headers.authorization;
     // let result = { accessToken: token.split(' ')[1], refreshToken: req.cookies.refreshToken };
-    if (!token) {
-      return res.status(403).json({message: "Пользователь не авторизован"})
-    }
+    // if (!token) {
+    //   return res.status(403).json({message: "Пользователь не авторизован"})
+    // }
     const decoded = jwt.decode(token.split(' ')[1], process.env.ACCESS_SECRET)
     // const expired = decoded.exp * 1000
     // const nowDate = (Date.now() + (3 * 60 * 60))
@@ -148,7 +148,7 @@ class UserController {
       user.avatar = process.env.CLIENT_URL + '/' + fileName;
       user.changed('avatar', true);
       user.save();
-      res.status(200)
+      // res.status(200)
       // .send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
       // .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
     })

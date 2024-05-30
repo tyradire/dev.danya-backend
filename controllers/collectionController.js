@@ -23,9 +23,9 @@ class CollectionController {
         collection.watched.push(movieId)
         collection.changed('watched', true)
         collection.save()
-        res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
+        return res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
       })
-      .catch(next)
+      .catch(next);
   }
 
   async deleteFromCollection(req, res, next) {
@@ -47,9 +47,9 @@ class CollectionController {
         collection.watched = collection.watched.filter(elemId => {return elemId != movieId})
         collection.changed('watched', true)
         collection.save()
-        res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
+        return res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
       })
-      .catch(next)
+      .catch(next);
   }
 
   async getCollection(req, res, next) {
@@ -69,9 +69,7 @@ class CollectionController {
     Collection.findOne({where: {userId}})
       .then((collection) => {
         const watched = collection.dataValues.watched;
-        res.status(200)
-        .send({watched,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION})
-        .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+        return res.status(200).send({watched,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION}).cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
       })
       .catch(next);
   }

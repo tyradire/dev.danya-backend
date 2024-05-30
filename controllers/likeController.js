@@ -24,9 +24,9 @@ class LikeController {
         collection.liked.push(movieId)
         collection.changed('liked', true)
         collection.save()
-        res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
+        return res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
       })
-      .catch(next)
+      .catch(next);
   }
 
   async deleteFromLiked(req, res, next) {
@@ -48,9 +48,9 @@ class LikeController {
         collection.liked = collection.liked.filter(elemId => {return elemId != movieId})
         collection.changed('liked', true)
         collection.save()
-        res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
+        return res.status(200).send({movieId,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
       })
-      .catch(next)
+      .catch(next);
   }
 
   async getLiked(req, res, next) {
@@ -70,9 +70,7 @@ class LikeController {
     Collection.findOne({where: {userId}})
       .then((collection) => {
         const liked = collection.dataValues.liked;
-        res.status(200)
-        .send({liked,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION})
-        .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+        return res.status(200).send({liked,accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION}).cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
       })
       .catch(next);
   }

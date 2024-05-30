@@ -46,7 +46,7 @@ class UserController {
         token.refreshToken = refreshToken;
         token.changed('refreshToken', true);
         token.save();
-        res.status(200).send({token})
+        return res.status(200).send({token})
       })
       .catch(err => console.log(err))
     res.cookie('refreshToken', refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
@@ -68,7 +68,7 @@ class UserController {
         token.refreshToken = '';
         token.changed('refreshToken', true);
         token.save();
-        res.status(200).send({token})
+        return res.status(200).send({token})
       })
       .catch(err => console.log(err))
     res.clearCookie('refreshToken')
@@ -94,9 +94,7 @@ class UserController {
         user.name = newName;
         user.changed('name', true);
         user.save();
-        res.status(200)
-        .send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
-        .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+        return res.status(200).send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION }).cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
       })
       .catch(err => console.log(err))
   }
@@ -116,26 +114,24 @@ class UserController {
     }
     User.findOne({where: {id: decoded.id}})
     .then(user => {
-      res.status(200)
-      .send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
-      .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+      return res.status(200).send({ user: user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION }).cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
     })
-    .catch(err => console.log(err))
+    .catch(next);
   }
 
   async changeAvatar(req, res, next) {
     const token = req.headers.authorization;
-    // let result = { accessToken: token.split(' ')[1], refreshToken: req.cookies.refreshToken };
-    // if (!token) {
-    //   return res.status(403).json({message: "Пользователь не авторизован"})
-    // }
+    let result = { accessToken: token.split(' ')[1], refreshToken: req.cookies.refreshToken };
+    if (!token) {
+      return res.status(403).json({message: "Пользователь не авторизован"})
+    }
     const decoded = jwt.decode(token.split(' ')[1], process.env.ACCESS_SECRET)
-    // const expired = decoded.exp * 1000
-    // const nowDate = (Date.now() + (3 * 60 * 60))
-    // if (nowDate > expired) {
-    //   console.log('Access token is expired!')
-    //   result = await TokenService.refreshToken({ refreshToken: req.cookies.refreshToken })
-    // }
+    const expired = decoded.exp * 1000
+    const nowDate = (Date.now() + (3 * 60 * 60))
+    if (nowDate > expired) {
+      console.log('Access token is expired!')
+      result = await TokenService.refreshToken({ refreshToken: req.cookies.refreshToken })
+    }
     if (!req.files) {
       return res.status(404).send(req);
     }
@@ -148,11 +144,9 @@ class UserController {
       user.avatar = process.env.CLIENT_URL + '/' + fileName;
       user.changed('avatar', true);
       user.save();
-      // res.status(200)
-      // .send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION })
-      // .cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+      return res.status(200).send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION }).cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
     })
-    .catch(err => console.log(err))
+    .catch(next);
   }
 }
 

@@ -12,24 +12,20 @@ const PORT = process.env.PORT || 3000
 
 const app = express();
 
-const options = {
-    origin: [
-        'http://localhost:8080',
-        'http://localhost:3000',
-        'http://danya-frontend.ru',
-        'http://dev.danya-frontend.ru',
-        'https://danya-frontend.ru',
-        'https://dev.danya-frontend.ru',
-    ],
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-    allowedHeaders: ['Content-Type', 'origin', 'Authorization'],
-    credentials: true,
-  };
+const urls = [
+    'http://localhost:8080',
+    'http://localhost:3000',
+    'http://danya-frontend.ru',
+    'http://dev.danya-frontend.ru',
+    'https://danya-frontend.ru',
+    'https://dev.danya-frontend.ru',
+]
 
 app.use(cookieParser())
-app.use('*', cors(options))
+app.use(cors({
+    credentials: true,
+    origin: urls
+}))
 app.use(express.json())
 app.use(express.static(path.resolve(__dirname, 'static')))
 app.use(fileUpload({

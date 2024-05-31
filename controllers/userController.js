@@ -136,7 +136,6 @@ class UserController {
     if (!req.files) {
       return res.status(404).send(req);
     }
-    console.log(req)
     let img = req.files.img;
     let imgFormat = req.files.img.name.split('.')[req.files.img.name.split('.').length - 1];
     let fileName = uuid.v4() + '.' + imgFormat;

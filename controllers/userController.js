@@ -2,6 +2,7 @@ const ApiError = require("../error/ApiError");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const uuid = require('uuid');
+const fs = require('fs');
 const path = require('path');
 const { User, Collection, UserToken } = require('../models/models');
 const TokenService = require('../utils/Token');
@@ -120,7 +121,6 @@ class UserController {
   }
 
   async changeAvatar(req, res, next) {
-    console.log('начало функции аватара')
     const token = req.headers.authorization;
     let result = { accessToken: token.split(' ')[1], refreshToken: req.cookies.refreshToken };
     if (!token) {
@@ -136,17 +136,22 @@ class UserController {
     if (!req.files) {
       return res.status(404).send(req);
     }
-    console.log(req.files, req.files.img)
+    console.log(req)
     let img = req.files.img;
     let imgFormat = req.files.img.name.split('.')[req.files.img.name.split('.').length - 1];
     let fileName = uuid.v4() + '.' + imgFormat;
     img.mv(path.resolve(__dirname, '..', 'static', fileName));
     User.findOne({where: {id: decoded.id}})
     .then(user => {
+      let oldAvatar = user.avatar.replace(process.env.CLIENT_URL, '');
       user.avatar = process.env.CLIENT_URL + '/' + fileName;
       user.changed('avatar', true);
       user.save();
-      return res.status(200).send({ user, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION }).cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
+      fs.unlink(`static/${oldAvatar}`, err => {
+        if(err) throw err;
+     });
+      console.log(user.avatar)
+      return res.status(200).send({ avatar: user.avatar, accessToken: result.accessToken, ACCESS_TOKEN_EXPIRATION }).cookie('refreshToken', result.refreshToken, COOKIE_SETTINGS.REFRESH_TOKEN)
     })
     .catch(next);
   }

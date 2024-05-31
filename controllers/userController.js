@@ -120,6 +120,7 @@ class UserController {
   }
 
   async changeAvatar(req, res, next) {
+    console.log('начало функции аватара')
     const token = req.headers.authorization;
     let result = { accessToken: token.split(' ')[1], refreshToken: req.cookies.refreshToken };
     if (!token) {
@@ -135,6 +136,7 @@ class UserController {
     if (!req.files) {
       return res.status(404).send(req);
     }
+    console.log(req.files, req.files.img)
     let img = req.files.img;
     let imgFormat = req.files.img.name.split('.')[req.files.img.name.split('.').length - 1];
     let fileName = uuid.v4() + '.' + imgFormat;

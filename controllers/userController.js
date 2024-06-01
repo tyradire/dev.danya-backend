@@ -121,7 +121,6 @@ class UserController {
   }
 
   async changeAvatar(req, res, next) {
-    console.log(99920, 'Вход в changeAvatar')
     const token = req.headers.authorization;
     let result = { accessToken: token.split(' ')[1], refreshToken: req.cookies.refreshToken };
     if (!token) {

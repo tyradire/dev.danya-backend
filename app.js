@@ -30,9 +30,7 @@ app.use('*', cors(options));
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.static(path.resolve(__dirname, 'static')))
-app.use(fileUpload({
-    limits: { fileSize: 50 * 1024 * 1024 }
-}))
+app.use(fileUpload({}))
 app.use('/api', router)
 
 
